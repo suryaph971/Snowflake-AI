@@ -119,3 +119,94 @@ CALL SNOWFLAKE.MODELS.CORTEX_BASE_MODELS_REFRESH();
 SHOW MODELS IN SNOWFLAKE.MODELS;
 
 SHOW APPLICATION ROLES IN APPLICATION SNOWFLAKE;
+
+
+--Snowflake Rest API LLM
+
+
+GRANT DATABASE ROLE SNOWFLAKE.CORTEX_USER To ROLE ACCOUNTADMIN;
+GRANT role ACCOUNTADMIN to user SNOWFLAKEPRACTICE22;
+
+
+
+ --vector_inner_product
+ CREATE TABLE vectors (a VECTOR(FLOAT, 3), b VECTOR(FLOAT, 3));
+
+ INSERT INTO vectors SELECT [1.1,2.2,3]::VECTOR(FLOAT,3), [1,1,1]::VECTOR(FLOAT,3);
+INSERT INTO vectors SELECT [1,2.2,3]::VECTOR(FLOAT,3), [4,6,8]::VECTOR(FLOAT,3);
+
+
+
+select * from vectors
+
+
+select vector_inner_product(a,b) from vectors
+
+select vector_l1_distance(a,b) from vectors
+
+
+select vector_l2_distance(a,b) from vectors
+
+
+select vector_cosine_similarity(a,b) from vectors
+
+--Entity Sentiment
+
+select snowflake.cortex.ENTITY_SENTIMENT('A tourist\'s delight, in low urban light,
+  Recommended gem, a pizza night sight.  Swift arrival, a pleasure so right,
+  Yet, pockets felt lighter, a slight pricey bite. 💰🍕🚀',
+  ['Cost','Waiting Time','Quality']
+  )
+
+
+select snowflake.cortex.ENTITY_SENTIMENT('A tourist\'s delight, in low urban light,
+  Recommended gem, a pizza night sight.  Swift arrival, a pleasure so right,
+  Yet, pockets felt lighter, a slight pricey bite. 💰🍕🚀',
+  ['Cost','Professionalism','Brand']
+  )
+
+
+  SELECT SNOWFLAKE.CORTEX.SENTIMENT('A tourist\'s delight, in low urban light,
+  Recommended gem, a pizza night sight. Swift arrival, a pleasure so right,
+  Yet, pockets felt lighter, a slight pricey bite. 💰🍕🚀');
+
+--Fine Tuning
+
+  SELECT *
+  FROM SNOWFLAKE.ACCOUNT_USAGE.CORTEX_FINE_TUNING_USAGE_HISTORY;
+
+
+  GRANT CREATE MODEL ON SCHEMA AISQL_SCHEMA TO ROLE ACCOUNTADMIN
+
+
+create or replace table support_tickets(
+TICKETID varchar(100),
+customer_name varchar(100),
+customer_email varchar(100),
+service_type varchar(100),
+request varchar(100),
+contact_preference varchar(100)
+)
+
+select * from support_tickets
+
+
+SET prompt = 'You are an agent that helps organize the requests that come to your support team
+The request category is the reason why the customer reached out. These are the possible types of request categories
+Slow performance
+Product Info
+Account Management
+Billing
+Technical Support
+';
+
+select snowflake.cortex.finetune(
+'CREATE',
+'my_tuned_model',
+'mistral-7b',
+'select PROMPT(prompt) as prompt,request as completion from support_tickets'
+)
+
+
+
+
